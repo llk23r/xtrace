@@ -11,6 +11,7 @@ module XTrace
       @config = config
       @rails_root = Rails.root.join("app").to_s
       @source_buffers = {} # Buffer for source file lines
+      @cwd = Dir.pwd
     end
 
     def call(env)
@@ -34,9 +35,8 @@ module XTrace
       def setup_trace(root_call)
         call_stack = [root_call]
         scope_stack = []
-
         TracePoint.new(:line, :call, :return, :class, :end) do |tp|
-          next unless tp.path.start_with?(@rails_root)
+          next unless tp.path.start_with?(@cwd)
           next if tp.method_id.nil?
           next if exclude_trace_path?(tp.path)
           handle_trace_event(call_stack, scope_stack, tp)
